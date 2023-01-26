@@ -148,11 +148,11 @@ public class V_AdminDashboard {
             JLabel label = new JLabel("The list Below is of the available Classes");
             StylingFunctions.initiateLabels(classesTab,label,50,0,300,40,Font.BOLD,32);
             //noms des columns
-            String[] columnsNames = new String[]{"ID","Class Subject","Class Description"};
+            String[] columnsNames = new String[]{"ID","Class Name","Class Subject","Class Description"};
             //creer le modele
             createTableModel(classModel,columnsNames);
             //ajouter les professeurs au modele
-            classes.forEach(classData->classModel.addRow(new Object[]{classData.getClassId(),classData.getClassSubject(),classData.getClassDescription()}));
+            classes.forEach(classData->classModel.addRow(new Object[]{classData.getClassId(),classData.getClassName(),classData.getClassSubject(),classData.getClassDescription()}));
             classModel.fireTableDataChanged();
             //creer une JTable a partir du modele
             JTable classesTable = new JTable(classModel);
@@ -183,7 +183,7 @@ public class V_AdminDashboard {
     public void onClassAdded(){
         List<ClassInfos> classes = admin.getAllClasses();
         classModel.setRowCount(0);
-        classes.forEach((classData)->classModel.addRow(new Object[]{classData.getClassId(),classData.getClassSubject(),classData.getClassDescription()}));
+        classes.forEach((classData)->classModel.addRow(new Object[]{classData.getClassId(),classData.getClassName(),classData.getClassSubject(),classData.getClassDescription()}));
     }
 
     private void styleStudentsTab(){

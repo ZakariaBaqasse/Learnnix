@@ -31,38 +31,42 @@ public class V_AddClass {
     private void setFrameComponents(){
         JLabel infoLabel = new JLabel("New Class");
         StylingFunctions.initiateLabels(mainFrame,infoLabel,150,50,300,40, Font.BOLD,32);
+        JTextField className = new JTextField();
         JTextField classSubject = new JTextField();
         JComboBox<String> profsList = initiateComboBox();
         JTextArea classDescription = new JTextArea();
+        JLabel classNameLabel = new JLabel("Class Name");
         JLabel classSubLabel = new JLabel("Class Subject");
         JLabel classResponsible = new JLabel("Professor in Charge");
         JLabel classDescLabel = new JLabel("Class Description");
-        StylingFunctions.initiateTextFields(mainFrame,classSubject,200,200,300,40);
-        StylingFunctions.comboBoxStyling(mainFrame,profsList,200,250,300,40);
-        StylingFunctions.styleTextArea(mainFrame,classDescription,200,300,300,100);
-        StylingFunctions.initiateLabels(mainFrame,classSubLabel,20,200,150,40,Font.PLAIN,16);
-        StylingFunctions.initiateLabels(mainFrame,classResponsible,20,250,150,40,Font.PLAIN,16);
-        StylingFunctions.initiateLabels(mainFrame,classDescLabel,20,300,150,40,Font.PLAIN,16);
+        StylingFunctions.initiateTextFields(mainFrame,className,200,200,300,40);
+        StylingFunctions.initiateTextFields(mainFrame,classSubject,200,250,300,40);
+        StylingFunctions.comboBoxStyling(mainFrame,profsList,200,300,300,40);
+        StylingFunctions.styleTextArea(mainFrame,classDescription,200,350,300,100);
+        StylingFunctions.initiateLabels(mainFrame,classNameLabel,20,200,150,40,Font.PLAIN,16);
+        StylingFunctions.initiateLabels(mainFrame,classSubLabel,20,250,150,40,Font.PLAIN,16);
+        StylingFunctions.initiateLabels(mainFrame,classResponsible,20,300,150,40,Font.PLAIN,16);
+        StylingFunctions.initiateLabels(mainFrame,classDescLabel,20,350,150,40,Font.PLAIN,16);
         JButton addButton = new JButton("Save");
-        StylingFunctions.buttonStyling(mainFrame,addButton,200,450,100,50);
+        StylingFunctions.buttonStyling(mainFrame,addButton,200,500,100,50);
         AtomicReference<String> profName = new AtomicReference<String>();
         profsList.addActionListener((ae)->{
             profName.set((String) profsList.getSelectedItem());
         });
-        addButton.addActionListener((ae)->addClassButtonListener(classSubject,classDescription,profName.toString()));
+        addButton.addActionListener((ae)->addClassButtonListener(className,classSubject,classDescription,profName.toString()));
     }
 
-    private void addClassButtonListener(JTextField classSubject,JTextArea classDescription,String profName){
-        if(classSubject.getText().equals("")||classDescription.getText().equals("")||profName ==null){
+    private void addClassButtonListener(JTextField className,JTextField classSubject, JTextArea classDescription, String profName){
+        if(className.getText().equals("")||classSubject.getText().equals("")||classDescription.getText().equals("")||profName ==null){
             JOptionPane.showMessageDialog(mainFrame,"All the fields are Required","Add Failed",JOptionPane.ERROR_MESSAGE);
         }else{
-            ClassInfos classData = new ClassInfos(classSubject.getText(), classDescription.getText());
+            ClassInfos classData = new ClassInfos(className.getText(),classSubject.getText(), classDescription.getText());
             if(admin.addClass(classData,profName)){
                 adminDashboard.onClassAdded();
                 JOptionPane.showMessageDialog(mainFrame,"class Added successfully");
                 mainFrame.dispose();
             }else{
-                JOptionPane.showMessageDialog(mainFrame,"Something went wrong! Please try again later","Login Failed",JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame,"Class with similar name already exist! Please try another one","Login Failed",JOptionPane.ERROR_MESSAGE);
             }
         }
     }

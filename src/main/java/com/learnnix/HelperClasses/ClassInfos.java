@@ -4,32 +4,37 @@ import java.io.Serializable;
 
 public class ClassInfos implements Serializable {
     private int classId;
+    private String className;
     private String classSubject;
     private String classDescription;
     private String profInCharge;
 
-    public ClassInfos(int classId, String classSubject, String classDescription) {
+    public ClassInfos(int classId,String className, String classSubject, String classDescription) {
         this.classId = classId;
+        this.className = className;
         this.classSubject = classSubject;
         this.classDescription = classDescription;
     }
 
-    public ClassInfos(String classSubject, String classDescription) {
+    public ClassInfos(String className,String classSubject, String classDescription) {
         this.classSubject = classSubject;
         this.classDescription = classDescription;
+        this.className = className;
     }
 
-    public ClassInfos(String classSubject, String classDescription, String profInCharge) {
+    public ClassInfos(String className,String classSubject, String classDescription, String profInCharge) {
         this.classSubject = classSubject;
         this.classDescription = classDescription;
         this.profInCharge = profInCharge;
+        this.className = className;
     }
 
-    public ClassInfos(int classId, String classSubject, String classDescription, String profInCharge) {
+    public ClassInfos(int classId,String className, String classSubject, String classDescription, String profInCharge) {
         this.classId = classId;
         this.classSubject = classSubject;
         this.classDescription = classDescription;
         this.profInCharge = profInCharge;
+        this.className = className;
     }
 
     public int getClassId() {
@@ -46,5 +51,9 @@ public class ClassInfos implements Serializable {
 
     public String getProfInCharge() {
         return profInCharge;
+    }
+
+    public String getClassName() {
+        return className;
     }
 }

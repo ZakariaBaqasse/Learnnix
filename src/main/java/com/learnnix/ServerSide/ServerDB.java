@@ -98,10 +98,10 @@ public class ServerDB {
     public List<ClassInfos> getAllClasses(){
         List<ClassInfos> classes = new ArrayList<>();
         try {
-            PreparedStatement selectStatement = connection.prepareStatement("select class_id,class_subject,class_description from classes");
+            PreparedStatement selectStatement = connection.prepareStatement("select class_id,class_name,class_subject,class_description from classes");
             ResultSet set = selectStatement.executeQuery();
             while (set.next()){
-                ClassInfos classData = new ClassInfos(set.getInt("class_id"),set.getString("class_subject"),set.getString("class_description") );
+                ClassInfos classData = new ClassInfos(set.getInt("class_id"),set.getString("class_name"),set.getString("class_subject"),set.getString("class_description") );
                 classes.add(classData);
             }
         } catch (SQLException e) {
@@ -111,36 +111,44 @@ public class ServerDB {
     }
     public boolean addClass(ClassInfos classData,String profName){
         boolean addedSuccessfully = false;
-        try {
-            int profId = getProfId(profName);
-            PreparedStatement statement = connection.prepareStatement("insert into classes(class_subject,class_description,prof_id) values (?,?,?)");
-            statement.setString(1, classData.getClassSubject());
-            statement.setString(2, classData.getClassDescription());
-            statement.setInt(3, profId);
-            if(statement.executeUpdate()>0){
-                addedSuccessfully = true;
+        if(classNameExist(classData.getClassName())){
+            addedSuccessfully = false;
+        }
+        else{
+            try {
+                int profId = getProfId(profName);
+                PreparedStatement statement = connection.prepareStatement("insert into classes(class_name,class_subject,class_description,prof_id) values (?,?,?,?)");
+                statement.setString(1, classData.getClassName());
+                statement.setString(2, classData.getClassSubject());
+                statement.setString(3, classData.getClassDescription());
+                statement.setInt(4, profId);
+                if(statement.executeUpdate()>0){
+                    addedSuccessfully = true;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
         return addedSuccessfully;
     }
 
     public boolean updateClassInfo(ClassInfos classInfos){
         boolean updatedSuccessfully = false;
-        int profId = getProfId(classInfos.getProfInCharge());
-        try {
-            PreparedStatement statement = connection.prepareStatement("update classes set class_subject=?,class_description=?,prof_id=? where class_id=?");
-            statement.setString(1, classInfos.getClassSubject());
-            statement.setString(2, classInfos.getClassDescription());
-            statement.setInt(3, profId);
-            statement.setInt(4, classInfos.getClassId());
-            if(statement.executeUpdate()>0){
-                updatedSuccessfully = true;
+            int profId = getProfId(classInfos.getProfInCharge());
+            try {
+                PreparedStatement statement = connection.prepareStatement("update classes set class_name=?, class_subject=?,class_description=?,prof_id=? where class_id=?");
+                statement.setString(1, classInfos.getClassName());
+                statement.setString(2, classInfos.getClassSubject());
+                statement.setString(3, classInfos.getClassDescription());
+                statement.setInt(4, profId);
+                statement.setInt(5, classInfos.getClassId());
+                if(statement.executeUpdate()>0){
+                    updatedSuccessfully = true;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+
         return updatedSuccessfully;
     }
 
@@ -151,13 +159,29 @@ public class ServerDB {
             statement.setInt(1,id);
             ResultSet set = statement.executeQuery();
             while (set.next()){
-                classData = new ClassInfos(id, set.getString("class_subject"), set.getString("class_description"),getProfessor(set.getInt("prof_id")).getProf_username());
+                classData = new ClassInfos(id,set.getString("class_name"),set.getString("class_subject"), set.getString("class_description"),getProfessor(set.getInt("prof_id")).getProf_username());
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return classData;
     }
+
+    public boolean classNameExist(String className){
+        boolean exist = false;
+        try {
+            PreparedStatement statement = connection.prepareStatement("select * from classes where class_name=?");
+            statement.setString(1,className);
+            ResultSet set = statement.executeQuery();
+            if(set.next()){
+                exist = true;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return  exist;
+    }
+
     public int getProfId(String profName){
         int profId = 0;
         PreparedStatement getProfStmt = null;
