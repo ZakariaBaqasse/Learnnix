@@ -1,6 +1,8 @@
 package com.learnnix.HelperClasses;
 
-public class StudentInfos {
+import java.io.Serializable;
+
+public class StudentInfos implements Serializable {
     private int studentId;
     private String studentUsername;
     private String studentEmail;
@@ -19,9 +21,15 @@ public class StudentInfos {
         this.studentEmail = studentEmail;
     }
 
-    public StudentInfos(String studentUsername, String studentEmail) {
+    public StudentInfos(String studentPassword, String studentEmail) {
+        this.studentPassword = studentPassword;
+        this.studentEmail = studentEmail;
+    }
+
+    public StudentInfos(String studentUsername, String studentEmail, String studentPassword) {
         this.studentUsername = studentUsername;
         this.studentEmail = studentEmail;
+        this.studentPassword = studentPassword;
     }
 
     public int getStudentId() {

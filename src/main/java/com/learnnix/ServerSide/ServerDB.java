@@ -7,9 +7,10 @@ import com.learnnix.HelperClasses.StudentInfos;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ServerDB {
-    private Connection connection;
+    private final Connection connection;
     public ServerDB(String username,String password,String connectionString) throws SQLException {
         this.connection = DriverManager.getConnection(connectionString,username,password);
     }
@@ -98,10 +99,10 @@ public class ServerDB {
     public List<ClassInfos> getAllClasses(){
         List<ClassInfos> classes = new ArrayList<>();
         try {
-            PreparedStatement selectStatement = connection.prepareStatement("select class_id,class_name,class_subject,class_description from classes");
+            PreparedStatement selectStatement = connection.prepareStatement("select class_id,class_name,class_subject,class_description,prof_id from classes");
             ResultSet set = selectStatement.executeQuery();
             while (set.next()){
-                ClassInfos classData = new ClassInfos(set.getInt("class_id"),set.getString("class_name"),set.getString("class_subject"),set.getString("class_description") );
+                ClassInfos classData = new ClassInfos(set.getInt("class_id"),set.getString("class_name"),set.getString("class_subject"),set.getString("class_description"),getProfessor(set.getInt("prof_id")).getProf_username());
                 classes.add(classData);
             }
         } catch (SQLException e) {
@@ -211,5 +212,111 @@ public class ServerDB {
             throw new RuntimeException(e);
         }
         return students;
+    }
+    ////////////////////////////////////////////////////////Student Functions///////////////////////////////
+    public boolean studentLogin(StudentInfos student){
+        boolean loginState = false;
+        try {
+            PreparedStatement statement = connection.prepareStatement("select * from students where student_email = ? AND student_password = ?");
+            statement.setString(1,student.getStudentEmail());
+            statement.setString(2,student.getStudentPassword());
+            ResultSet set = statement.executeQuery();
+            if(set.next()){
+                loginState = true;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return loginState;
+    }
+
+    public String registerStudent(StudentInfos student){
+        String registerState = "";
+        if(getStudentByEmail(student.getStudentEmail())!=null){
+            registerState = "Cannot Create account! Email already taken";
+        }else{
+            try {
+                PreparedStatement statement = connection.prepareStatement("insert into students(student_username,student_email,student_password) values (?,?,?)");
+                statement.setString(1,student.getStudentUsername());
+                statement.setString(2,student.getStudentEmail());
+                statement.setString(3,student.getStudentPassword());
+                if(statement.executeUpdate()>0){
+                    registerState = "Account created Successfully! Now Login with your Credentials";
+                }else{
+                    registerState = "Something went wrong! Please try again later";
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return registerState;
+    }
+
+    public StudentInfos getStudentByEmail(String studentEmail){
+        StudentInfos student = null;
+        try {
+            PreparedStatement statement = connection.prepareStatement("select * from students where student_email = ?");
+            statement.setString(1,studentEmail);
+            ResultSet set = statement.executeQuery();
+            while (set.next()){
+                student = new StudentInfos(set.getInt("student_id"),set.getString("student_username"),set.getString("student_email"), set.getString("student_password"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+      return student;
+    }
+    public List<ClassInfos> getJoinedClasses(String studentEmail){
+        List<ClassInfos> joinedClasses = new ArrayList<>();
+        StudentInfos student = getStudentByEmail(studentEmail);
+        try {
+            PreparedStatement statement = connection.prepareStatement("select classes.class_id,classes.class_name,classes.class_subject,classes.class_description,classes.prof_id\n" +
+                                                                          "from student_class\n" +
+                                                                          "inner join classes On classes.class_id = student_class.class_id AND student_class.student_id = ?");
+            statement.setInt(1,student.getStudentId());
+            ResultSet set = statement.executeQuery();
+            while (set.next()){
+                ClassInfos classInfos = new ClassInfos(set.getInt("class_id"),set.getString("class_name"),set.getString("class_subject"), set.getString("class_description"),getProfessor(set.getInt("prof_id")).getProf_username());
+                joinedClasses.add(classInfos);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return joinedClasses;
+    }
+
+    //retourne la liste de tous les classes a l'exception de celles deja integre par l'etudiant
+    public List<ClassInfos> getNonJoinedClasses(String studentEmail){
+        //variable qui va contenir la liste des classes non interees
+        List<ClassInfos> filteredClasses = new ArrayList<>();
+        //recuperer la liste de tous les listes
+        List<ClassInfos> allClasses = getAllClasses();
+        //recuperer la liste des classes que l'etudiant a integre
+        List<ClassInfos> joinedClasses = getJoinedClasses(studentEmail);
+        //si la liste des classes integrees est null
+        if(joinedClasses==null){
+            filteredClasses = allClasses;
+        }else{
+            //sinon
+            //filtrer (enlever) les classes que l'etudiant a deja integre de la liste des classes disponibles
+            filteredClasses = allClasses.stream().filter(classData->!joinedClasses.contains(classData)).toList();
+        }
+        return filteredClasses;
+    }
+
+    public boolean joinClass(String studentEmail,int classId){
+        boolean joinState = false;
+        int studentId = getStudentByEmail(studentEmail).getStudentId();
+        try {
+            PreparedStatement statement = connection.prepareStatement("insert into student_class(class_id,student_id) values (?,?)");
+            statement.setInt(1,classId);
+            statement.setInt(2,studentId);
+            if(statement.executeUpdate()>0){
+                joinState = true;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return joinState;
     }
 }

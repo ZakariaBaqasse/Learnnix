@@ -77,4 +77,16 @@ public class StylingFunctions {
         scrollPane.setBounds(x,y,width,height);
         container.add(scrollPane);
     }
+    public static void wrapLabelText(Container container,JTextArea textArea,int x,int y,int width,int height){
+        textArea.setFont(new Font("Roboto",Font.PLAIN,16));
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setRows(10); // number of rows
+        textArea.setColumns(20); // number of columns
+        textArea.setSize(new Dimension(250, textArea.getPreferredSize().height));
+        textArea.setMaximumSize(new Dimension(250, textArea.getPreferredSize().height));
+        textArea.setBounds(x,y,width,height);
+        container.add(textArea);
+    }
 }

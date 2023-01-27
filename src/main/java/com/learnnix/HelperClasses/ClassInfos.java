@@ -1,6 +1,7 @@
 package com.learnnix.HelperClasses;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class ClassInfos implements Serializable {
     private int classId;
@@ -55,5 +56,18 @@ public class ClassInfos implements Serializable {
 
     public String getClassName() {
         return className;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ClassInfos that = (ClassInfos) o;
+        return classId == that.classId && className.equals(that.className) && classSubject.equals(that.classSubject) && classDescription.equals(that.classDescription) && Objects.equals(profInCharge, that.profInCharge);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(classId, className, classSubject, classDescription, profInCharge);
     }
 }

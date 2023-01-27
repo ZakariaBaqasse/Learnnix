@@ -204,9 +204,9 @@ public class V_AdminDashboard {
             students.forEach(student->studentModel.addRow(new Object[]{student.getStudentId(),student.getStudentUsername(),student.getStudentEmail()}));
             studentModel.fireTableDataChanged();
             //creer une JTable a partir du modele
-            JTable classesTable = new JTable(studentModel);
+            JTable studentsTable = new JTable(studentModel);
             //ajouter la table a la panel
-            StylingFunctions.addStyleToTable(classesTable,classesTab,mainFrame);
+            StylingFunctions.addStyleToTable(studentsTable,studentsTab,mainFrame);
         }
     }
 }
