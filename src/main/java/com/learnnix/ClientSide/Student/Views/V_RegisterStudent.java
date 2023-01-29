@@ -47,7 +47,7 @@ public class V_RegisterStudent {
         StylingFunctions.initiateLabels(this.frame,emailLabel,180,400,100,40,Font.PLAIN,16);
         StylingFunctions.initiateLabels(this.frame,passwordLabel,180,450,100,40,Font.PLAIN,16);
         initiateCheckbox(passwordField);
-        JButton registerButton = new JButton("Login");
+        JButton registerButton = new JButton("Register");
         StylingFunctions.buttonStyling(this.frame,registerButton,280,530,100,40);
         registerButton.addActionListener((ae)->{
             registerListener(usernameField,passwordField,emailField);

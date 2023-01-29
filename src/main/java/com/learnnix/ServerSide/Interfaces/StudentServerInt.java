@@ -8,7 +8,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface StudentServerInt extends Remote {
+public interface StudentServerInt extends Remote, ChatServer {
     public boolean studentLogin(StudentInfos student) throws RemoteException;
     public String registerNewStudent(StudentInfos student) throws RemoteException;
     public List<ClassInfos> getJoinedClasses(String studentEmail) throws RemoteException;

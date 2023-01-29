@@ -7,7 +7,6 @@ import com.learnnix.HelperClasses.StudentInfos;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ServerDB {
     private final Connection connection;
@@ -318,5 +317,28 @@ public class ServerDB {
             throw new RuntimeException(e);
         }
         return joinState;
+    }
+
+    public ArrayList<String> getClassMembers(int classId){
+        ArrayList<String> members = new ArrayList<>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("select students.student_email from student_class\n" +
+                                                                          "inner join students on students.student_id = student_class.student_id AND student_class.class_id = ?");
+            statement.setInt(1,classId);
+            ResultSet set = statement.executeQuery();
+            while (set.next()){
+                members.add(set.getString("student_email"));
+            }
+            PreparedStatement statement1 = connection.prepareStatement("select professors.prof_name from classes\n" +
+                                                                           "inner join professors on professors.id = classes.prof_id AND classes.class_id = ?");
+            statement1.setInt(1,classId);
+            ResultSet set1 = statement1.executeQuery();
+            while (set1.next()){
+                members.add(set1.getString("prof_name"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return members;
     }
 }

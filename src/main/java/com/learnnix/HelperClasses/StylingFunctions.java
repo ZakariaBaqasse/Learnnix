@@ -89,4 +89,14 @@ public class StylingFunctions {
         textArea.setBounds(x,y,width,height);
         container.add(textArea);
     }
+
+    public static void setupMessageList(JList messages){
+        messages.setFixedCellHeight(50);
+        messages.setFixedCellWidth(600);
+        DefaultListCellRenderer renderer = (DefaultListCellRenderer) messages.getCellRenderer();
+        renderer.setHorizontalAlignment(SwingConstants.LEFT);
+        messages.setCellRenderer(renderer);
+        messages.setFont(new Font("Roboto",Font.PLAIN,16));
+        messages.setForeground(Color.decode("#175676"));
+    }
 }
