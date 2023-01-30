@@ -1,7 +1,6 @@
 package com.learnnix.ClientSide.Student.Views;
 
 import com.learnnix.ClientSide.ChatImplementations.ChatHandlerIMP;
-import com.learnnix.ClientSide.ChatIntefaces.ChatClientINF;
 import com.learnnix.ClientSide.Student.Student;
 import com.learnnix.HelperClasses.ClassInfos;
 import com.learnnix.HelperClasses.StylingFunctions;
@@ -12,8 +11,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
@@ -118,7 +115,6 @@ public class V_StudentDashboard {
         // add listener to open class lessons frame on click
         classCard.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                ChatHandlerIMP chatHandler = null;
                 try {
                    new V_ClassLessons(classInfos, student,(ChatServer) student.getStudentServer());
                 } catch (RemoteException | MalformedURLException ex) {

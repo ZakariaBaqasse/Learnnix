@@ -341,4 +341,73 @@ public class ServerDB {
         }
         return members;
     }
+    ///////////////////////////////////////Professor functions/////////////////////////////
+    public boolean professorLogin(String username,String password){
+        boolean loginState = false;
+        try {
+            PreparedStatement statement = connection.prepareStatement("select * from professors where prof_name=? and prof_password=?");
+            statement.setString(1,username);
+            statement.setString(2,password);
+            ResultSet set = statement.executeQuery();
+            if(set.next()) loginState = true;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return loginState;
+    }
+
+    public ArrayList<ClassInfos> getAssignedClasses(String profName){
+        ArrayList<ClassInfos> assignedClasses = new ArrayList<>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("select classes.class_id,classes.class_name,class_subject,class_description from classes inner join professors on professors.id = classes.prof_id AND professors.prof_name = ?");
+            statement.setString(1,profName);
+            ResultSet set = statement.executeQuery();
+            while (set.next()){
+                assignedClasses.add(new ClassInfos(set.getInt("class_id"),set.getString("class_name"), set.getString("class_subject"), set.getString("class_description"), profName ));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return assignedClasses;
+    }
+    public void saveFilePath(String fileName,int classId){
+        try {
+            PreparedStatement statement = connection.prepareStatement("insert into files(file_name,class_id) values (?,?)");
+            statement.setString(1,fileName);
+            statement.setInt(2,classId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public ArrayList<String> getStudentsByClass(int classID){
+        ArrayList<String> students = new ArrayList<>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("select students.student_email from student_class\n" +
+                                                                          "inner join students on students.student_id = student_class.student_id AND student_class.class_id = ?");
+            statement.setInt(1,classID);
+            ResultSet set = statement.executeQuery();
+            while (set.next()){
+                students.add(set.getString("student_email"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return students;
+    }
+
+    public ArrayList<String> getFilesByClass(int classID){
+        ArrayList<String> files = new ArrayList<>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("select file_name from files where class_id = ?");
+            statement.setInt(1,classID);
+            ResultSet set = statement.executeQuery();
+            while (set.next()){
+                files.add(set.getString("file_name"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return files;
+    }
 }

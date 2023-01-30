@@ -1,12 +1,11 @@
 package com.learnnix.ClientSide.ChatImplementations;
 
 import com.learnnix.ClientSide.ChatIntefaces.ChatClientINF;
+import com.learnnix.ClientSide.ChatIntefaces.ChatGUI;
 import com.learnnix.ClientSide.ChatIntefaces.ChatHandlerIF;
-import com.learnnix.ClientSide.Student.Views.V_ClassLessons;
 import com.learnnix.ServerSide.Interfaces.ChatServer;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -19,7 +18,7 @@ public class ChatHandlerIMP extends UnicastRemoteObject implements ChatHandlerIF
     private int classID;
     private ArrayList<String> classMembers;
     private ChatServer chatServer;
-    private V_ClassLessons gui;
+    private ChatGUI gui;
 
     public ChatHandlerIMP(ChatClientINF chatClient, int classID, ChatServer chatServer) throws RemoteException, MalformedURLException {
         super();
@@ -33,7 +32,7 @@ public class ChatHandlerIMP extends UnicastRemoteObject implements ChatHandlerIF
         System.out.println("Handler created");
     }
     //cette methode sert a recuperer le gui pour pouvoir afficher les messages
-    public void bindWithGui(V_ClassLessons gui){
+    public void bindWithGui(ChatGUI gui){
         this.gui = gui;
     }
     @Override
@@ -44,11 +43,6 @@ public class ChatHandlerIMP extends UnicastRemoteObject implements ChatHandlerIF
     }
 
     @Override
-    public byte[] retrieveFile(String fileName, String sender) throws RemoteException {
-        return new byte[0];
-    }
-
-    @Override
     public String getUsername() throws RemoteException {
         return chatClient.getUsername();
     }
@@ -56,5 +50,54 @@ public class ChatHandlerIMP extends UnicastRemoteObject implements ChatHandlerIF
     @Override
     public ArrayList<String> getClassMembers() throws RemoteException {
         return classMembers;
+    }
+
+    @Override
+    public void retrieveFile(String fileName) throws RemoteException {
+        gui.addNewFile(fileName);
+    }
+
+
+
+    public byte[] downloadFile(String fileName) throws RemoteException{
+        return chatServer.downloadFile(fileName);
+    }
+    @Override
+    public void notifyMouseClick(MouseEvent e) throws RemoteException {
+       gui.mouseClicked(e);
+    }
+
+    @Override
+    public void notifyMouseDrag(MouseEvent e) throws RemoteException {
+       gui.mouseDragged(e);
+    }
+
+
+    public void broadCastMouseClick(MouseEvent e,String user){
+        try {
+            chatServer.broadCastMouseClick(e,user);
+        } catch (RemoteException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void broadCastMouseDragged(MouseEvent e,String user){
+        try {
+            chatServer.broadCastMouseDragged(e,user);
+        } catch (RemoteException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    @Override
+    public void notifyClear() throws RemoteException {
+      gui.clear();
+    }
+
+    public void broadCastClear(String user){
+        try {
+            chatServer.broadCastClear(user);
+        } catch (RemoteException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

@@ -14,4 +14,5 @@ public interface StudentServerInt extends Remote, ChatServer {
     public List<ClassInfos> getJoinedClasses(String studentEmail) throws RemoteException;
     public List<ClassInfos> getNonJoinedClasses(String studentEmail) throws RemoteException;
     public boolean joinClass(String studentEmail,int classId) throws RemoteException;
+    public ArrayList<String> getUploadedFiles(int classId) throws RemoteException;
 }

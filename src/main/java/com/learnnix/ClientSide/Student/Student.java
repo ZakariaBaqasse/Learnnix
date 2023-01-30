@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Student implements ChatClientINF {
@@ -86,5 +87,12 @@ public class Student implements ChatClientINF {
         return this.getEmail();
     }
 
+    public ArrayList<String> getUploadedFiles(int classId){
+        try {
+            return studentServer.getUploadedFiles(classId);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

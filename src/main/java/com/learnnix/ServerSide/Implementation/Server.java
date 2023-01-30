@@ -6,9 +6,12 @@ import com.learnnix.HelperClasses.ClassInfos;
 import com.learnnix.HelperClasses.ProfessorInfos;
 import com.learnnix.HelperClasses.StudentInfos;
 import com.learnnix.ServerSide.Interfaces.AdminServerInt;
+import com.learnnix.ServerSide.Interfaces.ProfessorServer;
 import com.learnnix.ServerSide.Interfaces.StudentServerInt;
 import com.learnnix.ServerSide.ServerDB;
 
+import java.awt.event.MouseEvent;
+import java.io.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -17,10 +20,11 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Server extends UnicastRemoteObject implements AdminServerInt, StudentServerInt {
+public class Server extends UnicastRemoteObject implements AdminServerInt, StudentServerInt, ProfessorServer {
     private final ServerDB database;
     private static final String CLIENT_URL_START = "rmi://localhost/";
     private ArrayList<ChatHandlerIF> chatClients;
+    private static final String RESOURCE_PATH = "src/main/resources/prof-files/";
     public Server(ServerDB database) throws RemoteException {
         super();
         this.database = database;
@@ -103,6 +107,11 @@ public class Server extends UnicastRemoteObject implements AdminServerInt, Stude
     public boolean joinClass(String studentEmail, int classId) throws RemoteException {
         return database.joinClass(studentEmail,classId);
     }
+
+    @Override
+    public ArrayList<String> getUploadedFiles(int classId) throws RemoteException {
+        return database.getFilesByClass(classId);
+    }
     //////////fonctionnalites de chat de groupe///////////////////////////
 
     //cette fonction recoit un message puis le diffuse a tous les clients connectes
@@ -139,7 +148,6 @@ public class Server extends UnicastRemoteObject implements AdminServerInt, Stude
     }
 
 
-
     @Override
     public void unregisterChatClient(ChatHandlerIF chatClient) throws RemoteException {
         chatClients.remove(chatClient);
@@ -149,6 +157,8 @@ public class Server extends UnicastRemoteObject implements AdminServerInt, Stude
     public ArrayList<String> getClassMembers(int classID) throws RemoteException {
         return database.getClassMembers(classID);
     }
+
+
 
     //fonction qui retourne les membres de classes online
 
@@ -161,5 +171,129 @@ public class Server extends UnicastRemoteObject implements AdminServerInt, Stude
                 throw new RuntimeException(e);
             }
         }).findFirst().get();
+    }
+
+    @Override
+    public boolean professorLogin(String username, String password) throws RemoteException {
+        return database.professorLogin(username,password);
+    }
+
+    @Override
+    public ArrayList<ClassInfos> getAssignedClasses(String profName) throws RemoteException {
+        return database.getAssignedClasses(profName);
+    }
+
+    @Override
+    public void uploadFile(String fileName, byte[] fileData, String profName, int classId) throws RemoteException {
+        database.saveFilePath(fileName,classId);
+        try {
+            FileOutputStream outputStream = new FileOutputStream(RESOURCE_PATH+fileName);
+            outputStream.write(fileData);
+            outputStream.close();
+            dispatchFile(fileName,classId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ArrayList<String> getFilesByClass(int classId) throws RemoteException {
+        return database.getFilesByClass(classId);
+    }
+
+    private void dispatchFile(String filename,int classID){
+        //recuperer les etudiants de la classe
+        ArrayList<String> classMembers = database.getStudentsByClass(classID);
+        //recuperer les clients connectes
+        ArrayList<ChatHandlerIF> connectedClients = chatClients;
+        //filtrer les etudiants connectes qui sont dans la meme classe que le professeur qui a envoye le message
+        connectedClients.stream().filter(chatClient-> {
+            try {
+                return classMembers.contains(chatClient.getUsername());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        }).forEach(chatClient -> {
+            try {
+                //envoyer le fichier a chaque client connecte qui est dans la meme classe que le professeur qui a envoye le message
+                chatClient.retrieveFile(filename);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    @Override
+    public byte[] downloadFile(String fileName) throws RemoteException {
+        File file = new File(RESOURCE_PATH+fileName);
+        byte[] fileData = null;
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            fileData = new byte[(int) file.length()];
+            fileInputStream.read(fileData);
+            fileInputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return fileData;
+    }
+
+    @Override
+    public void broadCastMouseClick(MouseEvent event,String user) throws RemoteException {
+        ChatHandlerIF chatHandler = getChatHandler(user);
+        //filtrer les clients connectes qui sont dans la meme classe que le client qui utilise le tableau blanc
+        chatClients.stream().filter(chatClient-> {
+            try {
+                return chatHandler.getClassMembers().contains(chatClient.getUsername()) && !chatClient.getUsername().equals(chatHandler.getUsername());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        }).forEach(chatClient -> {
+            try {
+                //envoyer le message a chaque client connecte qui est dans la meme classe que le client qui a envoye le message
+                chatClient.notifyMouseClick(event);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void broadCastMouseDragged(MouseEvent event,String user) throws RemoteException {
+        ChatHandlerIF chatHandler = getChatHandler(user);
+        //filtrer les clients connectes qui sont dans la meme classe que le client qui a envoye le message
+        chatClients.stream().filter(chatClient-> {
+            try {
+                return chatHandler.getClassMembers().contains(chatClient.getUsername()) && !chatClient.getUsername().equals(chatHandler.getUsername());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        }).forEach(chatClient -> {
+            try {
+                //envoyer le message a chaque client connecte qui est dans la meme classe que le client qui a envoye le message
+                chatClient.notifyMouseDrag(event);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void broadCastClear(String user) throws RemoteException {
+        ChatHandlerIF chatHandler = getChatHandler(user);
+        //filtrer les clients connectes qui sont dans la meme classe que le client qui a envoye le message
+        chatClients.stream().filter(chatClient-> {
+            try {
+                return chatHandler.getClassMembers().contains(chatClient.getUsername()) && !chatClient.getUsername().equals(chatHandler.getUsername());
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        }).forEach(chatClient -> {
+            try {
+                //envoyer le message a chaque client connecte qui est dans la meme classe que le client qui a envoye le message
+                chatClient.notifyClear();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
